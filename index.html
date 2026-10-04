@@ -1,0 +1,870 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes, maximum-scale=2.0">
+  <title>Тренажёр: Магия Промтов</title>
+  <style>
+    :root {
+      --reb-pink: #ED3269;
+      --reb-pink-hover: #D12558;
+      --reb-pink-light: #FAD1DE;
+      --reb-dark: #1E1E1E;
+      --reb-bg: #F5F7FA;
+      --card-bg: #FFFFFF;
+      --border-color: #E2E8F0;
+      --success-color: #22C55E;
+      --error-color: #EF4444;
+      --card-blue: #4F46E5; 
+      --card-blue-light: #EEF2FF;
+      --card-yellow: #FFB82E;
+    }
+
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+      font-family: 'Segoe UI', 'Comic Sans MS', 'Roboto', sans-serif;
+    }
+
+    body {
+      background-color: var(--reb-bg);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      min-height: 100vh;
+      padding: 20px;
+      color: var(--reb-dark);
+    }
+
+    .logo {
+      position: absolute;
+      top: 20px;
+      right: 20px;
+      height: 40px;
+      z-index: 10;
+    }
+
+    .main-container {
+      max-width: 900px;
+      width: 100%;
+      background: var(--card-bg);
+      border-radius: 40px;
+      padding: 40px;
+      box-shadow: 0 15px 40px rgba(0,0,0,0.06);
+      position: relative;
+      border: 4px solid #E2E8F0;
+      min-height: 600px;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .header-text {
+      text-align: center;
+      margin-bottom: 20px;
+    }
+
+    .title {
+      font-size: 2.5rem;
+      font-weight: 800;
+      color: var(--reb-dark);
+      margin-bottom: 10px;
+    }
+
+    .subtitle {
+      font-size: 1.2rem;
+      color: #64748B;
+      background: #F1F5F9;
+      display: inline-block;
+      padding: 10px 25px;
+      border-radius: 30px;
+      font-weight: bold;
+      margin-bottom: 10px;
+    }
+
+    /* Прогресс-бар */
+    .progress-container {
+      width: 100%;
+      height: 12px;
+      background: #EAECEF;
+      border-radius: 10px;
+      margin-bottom: 30px;
+      overflow: hidden;
+    }
+    
+    .progress-bar {
+      height: 100%;
+      background: var(--reb-pink);
+      width: 0%;
+      transition: width 0.4s ease;
+      border-radius: 10px;
+    }
+
+    /* Экраны (Слайды) */
+    .slide {
+      display: none;
+      flex-grow: 1;
+      animation: fadeIn 0.4s ease;
+      flex-direction: column;
+    }
+
+    .slide.active {
+      display: flex;
+    }
+
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(15px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    /* Стили для Части 1 (Квиз) */
+    .prompt-box {
+      border-radius: 30px;
+      padding: 25px;
+      margin-bottom: 25px;
+      display: flex;
+      align-items: center;
+      gap: 20px;
+    }
+
+    .bad-prompt {
+      background: #FFF1F2;
+      border: 3px dashed #FAD1DE;
+    }
+    
+    .good-prompt {
+      background: #F0FDF4;
+      border: 3px solid #BBF7D0;
+      display: none; 
+      flex-direction: column;
+      align-items: flex-start;
+      margin-top: 20px;
+    }
+    
+    .good-prompt.revealed {
+      display: flex;
+      animation: popIn 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
+    }
+
+    @keyframes popIn {
+      0% { transform: scale(0.9); opacity: 0; }
+      100% { transform: scale(1); opacity: 1; }
+    }
+
+    .prompt-content {
+      flex: 1;
+    }
+
+    .prompt-label {
+      font-size: 1rem;
+      font-weight: 800;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      margin-bottom: 8px;
+    }
+    .bad-prompt .prompt-label { color: #E11D48; }
+    .good-prompt .prompt-label { color: #16A34A; }
+
+    .prompt-text {
+      font-size: 1.4rem;
+      font-weight: 700;
+      color: var(--reb-dark);
+      line-height: 1.4;
+    }
+
+    .character-img {
+      width: 120px;
+      height: 120px;
+      object-fit: contain;
+      flex-shrink: 0;
+    }
+
+    .question-title {
+      font-size: 1.4rem;
+      font-weight: 800;
+      text-align: center;
+      margin-bottom: 20px;
+      color: var(--reb-dark);
+    }
+
+    .options-container {
+      display: grid;
+      grid-template-columns: 1fr 1fr 1fr;
+      gap: 15px;
+      margin-bottom: 15px;
+    }
+
+    .option-btn {
+      padding: 20px;
+      border-radius: 24px;
+      border: 3px solid #CBD5E1;
+      background: #ffffff;
+      font-weight: 800;
+      font-size: 1.3rem;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      color: #334155;
+      text-align: center;
+      box-shadow: 0 6px 0 #CBD5E1;
+    }
+
+    .option-btn:hover:not(:disabled) {
+      border-color: var(--card-yellow);
+      background: #FFFBEB;
+      color: #B45309;
+      transform: translateY(2px);
+      box-shadow: 0 4px 0 var(--card-yellow);
+    }
+
+    .option-btn:active:not(:disabled) {
+      transform: translateY(6px);
+      box-shadow: 0 0 0 transparent;
+    }
+
+    .option-btn.correct {
+      background: #F0FDF4 !important;
+      border-color: #22C55E !important;
+      color: #166534 !important;
+      box-shadow: 0 6px 0 #16A34A !important;
+    }
+
+    .option-btn.wrong {
+      background: #FFF1F2 !important;
+      border-color: #E11D48 !important;
+      color: #9F1239 !important;
+      animation: shake 0.4s cubic-bezier(.36,.07,.19,.97) both;
+    }
+
+    .option-btn:disabled {
+      opacity: 0.6;
+      cursor: not-allowed;
+      transform: translateY(6px);
+      box-shadow: 0 0 0 transparent;
+    }
+
+    @keyframes shake {
+      10%, 90% { transform: translate3d(-2px, 0, 0); }
+      20%, 80% { transform: translate3d(4px, 0, 0); }
+      30%, 50%, 70% { transform: translate3d(-6px, 0, 0); }
+      40%, 60% { transform: translate3d(6px, 0, 0); }
+    }
+
+    .explanation {
+      background: #E0F2FE;
+      color: #0369A1;
+      padding: 15px 25px;
+      border-radius: 20px;
+      font-weight: 700;
+      font-size: 1.1rem;
+      margin-bottom: 15px;
+      border: 2px solid #BAE6FD;
+    }
+
+    /* Стили для Части 2 (Сопоставление) */
+    .match-area {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 30px;
+      margin-top: 20px;
+    }
+
+    .match-col {
+      display: flex;
+      flex-direction: column;
+      gap: 15px;
+    }
+
+    .match-btn {
+      background: white;
+      border: 3px solid #CBD5E1;
+      border-radius: 20px;
+      padding: 15px 20px;
+      font-size: 1.2rem;
+      font-weight: 800;
+      color: #334155;
+      cursor: pointer;
+      text-align: center;
+      transition: all 0.2s;
+      box-shadow: 0 4px 0 #CBD5E1;
+      user-select: none;
+    }
+
+    .match-text {
+      background: #F8FAFC;
+      border: 3px dashed #94A3B8;
+      border-radius: 20px;
+      padding: 20px;
+      font-size: 1.1rem;
+      font-weight: 600;
+      color: #1E293B;
+      cursor: pointer;
+      transition: all 0.2s;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      text-align: center;
+      min-height: 100px;
+      user-select: none;
+    }
+
+    .match-btn:hover:not(.matched), .match-text:hover:not(.matched) {
+      transform: translateY(-2px);
+    }
+
+    .match-btn.selected {
+      border-color: var(--reb-pink);
+      background: var(--reb-pink-light);
+      color: var(--reb-pink-hover);
+      box-shadow: 0 4px 0 var(--reb-pink);
+    }
+
+    .match-text.highlight {
+      border-color: var(--reb-pink);
+      background: #FFF1F2;
+    }
+
+    .matched {
+      background: #F0FDF4 !important;
+      border: 3px solid #22C55E !important;
+      color: #166534 !important;
+      box-shadow: none !important;
+      cursor: default;
+      transform: none !important;
+      opacity: 0.8;
+    }
+
+    /* Стили для Части 3 (Drag and Drop) */
+    .dnd-area {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 15px;
+      margin-top: 20px;
+    }
+    .dnd-col {
+      background: #F8FAFC;
+      border: 3px dashed #CBD5E1;
+      border-radius: 24px;
+      padding: 15px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 10px;
+      min-height: 180px;
+    }
+    .dnd-col-title {
+      font-weight: 800;
+      font-size: 1.2rem;
+      color: #334155;
+      margin-bottom: 10px;
+      text-align: center;
+    }
+    .dnd-slot {
+      width: 100%;
+      flex-grow: 1;
+      border-radius: 16px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: background 0.2s;
+    }
+    .dnd-slot.drag-over {
+      background: #E2E8F0;
+    }
+    .dnd-bank {
+      display: flex;
+      flex-direction: column;
+      gap: 15px;
+      margin-top: 30px;
+      background: #EEF2FF;
+      padding: 20px;
+      border-radius: 24px;
+      border: 3px solid #C7D2FE;
+    }
+    .dnd-card {
+      background: white;
+      border: 3px solid #A5B4FC;
+      border-radius: 16px;
+      padding: 15px 20px;
+      font-size: 1.1rem;
+      font-weight: 700;
+      color: #3730A3;
+      cursor: grab;
+      text-align: center;
+      box-shadow: 0 4px 0 #A5B4FC;
+      transition: transform 0.1s;
+      user-select: none;
+    }
+    .dnd-card:active {
+      cursor: grabbing;
+      transform: translateY(4px);
+      box-shadow: none;
+    }
+    .dnd-card.selected {
+      border-color: var(--reb-pink);
+      box-shadow: 0 4px 0 var(--reb-pink);
+    }
+    .dnd-card.correct {
+      background: #F0FDF4;
+      border-color: #22C55E;
+      color: #166534;
+      box-shadow: 0 4px 0 #16A34A;
+      cursor: default;
+    }
+    .dnd-card.wrong {
+      background: #FFF1F2;
+      border-color: #E11D48;
+      color: #9F1239;
+      animation: shake 0.4s cubic-bezier(.36,.07,.19,.97) both;
+    }
+
+    /* Навигация */
+    .controls {
+      display: flex;
+      justify-content: flex-end;
+      margin-top: auto;
+      padding-top: 30px;
+    }
+
+    .btn-next {
+      background: var(--reb-pink);
+      color: white;
+      border: none;
+      padding: 16px 40px;
+      font-size: 1.3rem;
+      font-weight: 800;
+      border-radius: 40px;
+      cursor: pointer;
+      box-shadow: 0 6px 0 var(--reb-pink-hover);
+      transition: all 0.1s;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+    }
+
+    .btn-next:active {
+      transform: translateY(6px);
+      box-shadow: 0 0 0 transparent;
+    }
+
+    .btn-next:disabled {
+      background: #CBD5E1;
+      box-shadow: 0 6px 0 #94A3B8;
+      cursor: not-allowed;
+    }
+
+    /* Финальный экран */
+    .final-screen {
+      text-align: center;
+      padding: 40px 20px;
+    }
+    
+    .final-screen img {
+      width: 200px;
+      margin-bottom: 20px;
+      animation: popIn 1s infinite alternate ease-in-out;
+    }
+
+    @media (max-width: 768px) {
+      .main-container { padding: 30px 15px; border-width: 2px; }
+      .prompt-box { flex-direction: column; text-align: center; }
+      .options-container { grid-template-columns: 1fr; }
+      .logo { height: 30px; top: 10px; right: 10px; }
+      .btn-next { width: 100%; }
+      .match-area { grid-template-columns: 1fr; gap: 15px; }
+      .dnd-area { grid-template-columns: 1fr; }
+      .dnd-col { min-height: 120px; }
+    }
+  </style>
+</head>
+<body>
+
+  <img src="logo.svg" alt="Rebotica" class="logo">
+
+  <div class="main-container">
+    <div class="header-text">
+      <h1 class="title">Магия Промтов ✨</h1>
+      <div class="subtitle" id="mainSubtitle">Формула: Роль + Задача + Условие</div>
+    </div>
+
+    <div class="progress-container" id="progressContainer">
+      <div class="progress-bar" id="progressBar"></div>
+    </div>
+
+    <!-- Контейнер для слайдов -->
+    <div id="slidesContainer"></div>
+
+    <div class="controls">
+      <button class="btn-next" id="nextBtn" disabled>Дальше ➡</button>
+    </div>
+  </div>
+
+  <script>
+    // --- ДАННЫЕ ДЛЯ ЧАСТИ 1 (КВИЗ) ---
+    const quizData = [
+      {
+        badPrompt: "Придумай загадку про котика. Пусть она будет в стихах.",
+        correct: "Роль 🎭",
+        explanation: "Здесь не указано, КЕМ должен быть ИИ. Если он притворится поэтом или детским писателем, загадка будет намного лучше!",
+        goodPrompt: "Ты известный детский поэт. Придумай загадку про котика. Пусть она будет в стихах."
+      },
+      {
+        badPrompt: "Ты капитан пиратов. Напиши, чтобы было смешно и использовались пиратские слова.",
+        correct: "Задача 🎯",
+        explanation: "ИИ не понимает, ЧТО именно нужно сделать. Написать песню? Рассказать историю? Придумать игру? Нужно дать задачу!",
+        goodPrompt: "Ты капитан пиратов. Напиши веселую песню про сокровища. Сделай так, чтобы было смешно и использовались пиратские слова."
+      },
+      {
+        badPrompt: "Ты шеф-повар. Напиши рецепт огромного бутерброда.",
+        correct: "Условие ⚙️",
+        explanation: "Не хватает деталей! Какой это бутерброд? Сладкий? Из космоса? Если добавить интересное условие, рецепт будет круче.",
+        goodPrompt: "Ты шеф-повар. Напиши рецепт огромного бутерброда. Условие: использовать только сладкие ингредиенты и мармелад."
+      }
+    ];
+
+    const slotsOptions = ["Роль 🎭", "Задача 🎯", "Условие ⚙️"];
+    
+    // --- ДАННЫЕ ДЛЯ ЧАСТИ 2 (СОПОСТАВЛЕНИЕ) ---
+    const matchData = [
+      { type: 'role', title: 'Роль 🎭', text: 'Ты смешной инопланетянин с планеты Бульк 👽' },
+      { type: 'task', title: 'Задача 🎯', text: 'Придумай веселую космическую сказку 🚀' },
+      { type: 'condition', title: 'Условие ⚙️', text: 'Напиши ровно 5 предложений про то, как случилась беда из-за гигантской пиццы 🍕' }
+    ];
+
+    // --- ДАННЫЕ ДЛЯ ЧАСТИ 3 (ПЕРЕТАСКИВАНИЕ КОЛОНОК) ---
+    const dndData = [
+      { id: 'role', title: 'Роль 🎭', text: 'Ты добрый дракон, который обожает сладкое 🐉🍦' },
+      { id: 'task', title: 'Задача 🎯', text: 'Напиши рецепт самого огромного десерта в мире 🍧' },
+      { id: 'condition', title: 'Условие ⚙️', text: 'Используй слова "зефирка", "шоколад" и "взрыв" 💥' }
+    ];
+
+    let currentIndex = 0;
+    const slidesContainer = document.getElementById('slidesContainer');
+    const nextBtn = document.getElementById('nextBtn');
+    const progressBar = document.getElementById('progressBar');
+
+    // Переменные для Части 2
+    let selectedLeftBtn = null;
+    let matchesFound = 0;
+
+    // --- ОТРИСОВКА ВСЕХ СЛАЙДОВ ---
+    function renderSlides() {
+      slidesContainer.innerHTML = '';
+      
+      // 1. Слайды Квиза
+      quizData.forEach((q, index) => {
+        const slideDiv = document.createElement('div');
+        slideDiv.className = `slide ${index === 0 ? 'active' : ''}`;
+        slideDiv.id = `slide-${index}`;
+
+        let optionsHtml = '';
+        slotsOptions.forEach(opt => {
+          const isCorrect = (opt === q.correct);
+          optionsHtml += `<button class="option-btn" onclick="checkQuizAnswer(this, ${index}, ${isCorrect})">${opt}</button>`;
+        });
+
+        slideDiv.innerHTML = `
+          <div style="color: #64748B; font-weight: bold; margin-bottom: 10px; font-size: 1.2rem; text-align: center;">
+            Задание ${index + 1}
+          </div>
+          
+          <div class="prompt-box bad-prompt">
+            <img src="reb.png" class="character-img" alt="Реб" onerror="this.src='data:image/svg+xml;utf8,<svg xmlns=\\\'http://www.w3.org/2000/svg\\\' width=\\\'100\\\' height=\\\'100\\\'><circle cx=\\\'50\\\' cy=\\\'50\\\' r=\\\'45\\\' fill=\\\'%23ED3269\\\'/></svg>'">
+            <div class="prompt-content">
+              <div class="prompt-label">Чего-то не хватает...</div>
+              <div class="prompt-text">«${q.badPrompt}»</div>
+            </div>
+          </div>
+          
+          <div class="question-title">Какой кусочек промта забыли добавить?</div>
+          <div class="options-container" id="options-${index}">
+            ${optionsHtml}
+          </div>
+
+          <div class="good-prompt" id="answer-${index}">
+            <div class="explanation">💡 <b>${q.correct}:</b> ${q.explanation}</div>
+            <div style="display: flex; gap: 20px; align-items: center; width: 100%;">
+              <img src="neiro.png" class="character-img" alt="Нейро" onerror="this.src='data:image/svg+xml;utf8,<svg xmlns=\\\'http://www.w3.org/2000/svg\\\' width=\\\'100\\\' height=\\\'100\\\'><rect width=\\\'100\\\' height=\\\'100\\\' fill=\\\'%231E1E1E\\\' rx=\\\'15\\\'/></svg>'">
+              <div class="prompt-content">
+                <div class="prompt-label">Идеальный промт:</div>
+                <div class="prompt-text" style="color: #166534;">«${q.goodPrompt}»</div>
+              </div>
+            </div>
+          </div>
+        `;
+        slidesContainer.appendChild(slideDiv);
+      });
+
+      // 2. Слайд Сопоставления (Часть 2)
+      const matchSlideIndex = quizData.length;
+      const matchSlide = document.createElement('div');
+      matchSlide.className = 'slide';
+      matchSlide.id = `slide-${matchSlideIndex}`;
+      
+      // Перемешиваем тексты для правой колонки
+      const shuffledTexts = [...matchData].sort(() => Math.random() - 0.5);
+
+      let leftColHtml = '';
+      matchData.forEach(item => {
+        leftColHtml += `<button class="match-btn" data-type="${item.type}" onclick="selectLeft(this)">${item.title}</button>`;
+      });
+
+      let rightColHtml = '';
+      shuffledTexts.forEach(item => {
+        rightColHtml += `<div class="match-text" data-type="${item.type}" onclick="selectRight(this)">${item.text}</div>`;
+      });
+
+      matchSlide.innerHTML = `
+        <div style="color: #64748B; font-weight: bold; margin-bottom: 10px; font-size: 1.2rem; text-align: center;">
+          Финальное задание (1 из 2)
+        </div>
+        <div class="question-title" style="font-size: 1.8rem;">Собери промт про Инопланетянина и Пиццу! 🍕</div>
+        <p style="text-align: center; font-size: 1.2rem; margin-bottom: 10px;">Кликни на название (слева), а потом на правильный кусочек текста (справа).</p>
+        
+        <div class="match-area">
+          <div class="match-col" id="leftMatchCol">${leftColHtml}</div>
+          <div class="match-col" id="rightMatchCol">${rightColHtml}</div>
+        </div>
+      `;
+      slidesContainer.appendChild(matchSlide);
+
+      // 3. Слайд Перетаскивания (Часть 3)
+      const dndSlideIndex = matchSlideIndex + 1;
+      const dndSlide = document.createElement('div');
+      dndSlide.className = 'slide';
+      dndSlide.id = `slide-${dndSlideIndex}`;
+      
+      let dndColsHtml = '';
+      dndData.forEach(item => {
+        dndColsHtml += `
+          <div class="dnd-col">
+            <div class="dnd-col-title">${item.title}</div>
+            <div class="dnd-slot" data-target="${item.id}" onclick="handleSlotClick(this)"></div>
+          </div>
+        `;
+      });
+
+      const shuffledDnd = [...dndData].sort(() => Math.random() - 0.5);
+      let dndBankHtml = '';
+      shuffledDnd.forEach(item => {
+        dndBankHtml += `<div class="dnd-card" draggable="true" data-id="${item.id}" onclick="handleCardClick(this)">${item.text}</div>`;
+      });
+
+      dndSlide.innerHTML = `
+        <div style="color: #64748B; font-weight: bold; margin-bottom: 10px; font-size: 1.2rem; text-align: center;">
+          Финальное задание (2 из 2)
+        </div>
+        <div class="question-title" style="font-size: 1.8rem;">А теперь про Дракона-сладкоежку! 🐉</div>
+        <p style="text-align: center; font-size: 1.2rem; margin-bottom: 10px;">Перетащи кусочки промта из банка в правильные колонки (или кликай по ним).</p>
+        
+        <div class="dnd-area">${dndColsHtml}</div>
+        <div class="dnd-bank" id="dndBank">${dndBankHtml}</div>
+      `;
+      slidesContainer.appendChild(dndSlide);
+
+      // 4. Финальный слайд
+      const finalSlide = document.createElement('div');
+      finalSlide.className = 'slide final-screen';
+      finalSlide.id = `slide-${dndSlideIndex + 1}`;
+      finalSlide.innerHTML = `
+        <img src="neiro.png" alt="Нейро" onerror="this.src='data:image/svg+xml;utf8,<svg xmlns=\\\'http://www.w3.org/2000/svg\\\' width=\\\'150\\\' height=\\\'150\\\'><rect width=\\\'150\\\' height=\\\'150\\\' fill=\\\'%231E1E1E\\\' rx=\\\'20\\\'/></svg>'">
+        <h2 style="font-size: 3rem; color: var(--reb-dark); margin-bottom: 15px;">Блестяще! 🌟</h2>
+        <p style="font-size: 1.4rem; color: #475569; line-height: 1.5; font-weight: bold;">
+          Ты проявил себя как настоящий маг промтов! <br>Теперь ты знаешь заклинание: <br><span style="color: var(--reb-pink); font-size: 1.8rem;">Роль + Задача + Условие</span>
+        </p>
+      `;
+      slidesContainer.appendChild(finalSlide);
+    }
+
+    // --- ЛОГИКА КВИЗА ---
+    window.checkQuizAnswer = function(btnElement, index, isCorrect) {
+      if (isCorrect) {
+        btnElement.classList.add('correct');
+        const container = document.getElementById(`options-${index}`);
+        const allButtons = container.querySelectorAll('.option-btn');
+        allButtons.forEach(btn => btn.disabled = true);
+        
+        const answerBox = document.getElementById(`answer-${index}`);
+        answerBox.classList.add('revealed');
+        
+        nextBtn.disabled = false;
+      } else {
+        btnElement.classList.add('wrong');
+        setTimeout(() => btnElement.classList.remove('wrong'), 500);
+      }
+    };
+
+    // --- ЛОГИКА СОПОСТАВЛЕНИЯ ---
+    window.selectLeft = function(btn) {
+      if (btn.classList.contains('matched')) return;
+
+      // Снимаем выделение с других
+      document.querySelectorAll('.match-btn').forEach(b => b.classList.remove('selected'));
+      
+      btn.classList.add('selected');
+      selectedLeftBtn = btn;
+
+      // Подсвечиваем правую колонку
+      document.querySelectorAll('.match-text:not(.matched)').forEach(t => t.classList.add('highlight'));
+    };
+
+    window.selectRight = function(textBlock) {
+      if (textBlock.classList.contains('matched') || !selectedLeftBtn) return;
+
+      const targetType = textBlock.dataset.type;
+      const selectedType = selectedLeftBtn.dataset.type;
+
+      // Убираем подсветку
+      document.querySelectorAll('.match-text').forEach(t => t.classList.remove('highlight'));
+
+      if (targetType === selectedType) {
+        // Правильно!
+        selectedLeftBtn.classList.remove('selected');
+        selectedLeftBtn.classList.add('matched');
+        textBlock.classList.add('matched');
+        selectedLeftBtn = null;
+        matchesFound++;
+
+        if (matchesFound === matchData.length) {
+          nextBtn.disabled = false; // Открываем кнопку дальше
+        }
+      } else {
+        // Ошибка
+        textBlock.classList.add('wrong');
+        selectedLeftBtn.classList.remove('selected');
+        selectedLeftBtn = null;
+        
+        setTimeout(() => {
+          textBlock.classList.remove('wrong');
+        }, 500);
+      }
+    };
+
+    // --- ЛОГИКА ПЕРЕТАСКИВАНИЯ (ЧАСТЬ 3) ---
+    let selectedDndCard = null;
+    let dndMatchesFound = 0;
+
+    function initDND() {
+      const cards = document.querySelectorAll('.dnd-card');
+      const slots = document.querySelectorAll('.dnd-slot');
+
+      cards.forEach(card => {
+        card.addEventListener('dragstart', (e) => {
+          if (card.classList.contains('correct')) return;
+          e.dataTransfer.setData('text/plain', card.dataset.id);
+          selectedDndCard = card;
+          setTimeout(() => card.style.opacity = '0.5', 0);
+        });
+
+        card.addEventListener('dragend', () => {
+          card.style.opacity = '1';
+          selectedDndCard = null;
+        });
+      });
+
+      slots.forEach(slot => {
+        slot.addEventListener('dragover', (e) => {
+          e.preventDefault();
+          if (!slot.hasChildNodes()) {
+            slot.classList.add('drag-over');
+          }
+        });
+
+        slot.addEventListener('dragleave', () => {
+          slot.classList.remove('drag-over');
+        });
+
+        slot.addEventListener('drop', (e) => {
+          e.preventDefault();
+          slot.classList.remove('drag-over');
+          const draggedId = e.dataTransfer.getData('text/plain');
+          const targetId = slot.dataset.target;
+          
+          if (draggedId === targetId && selectedDndCard) {
+            slot.appendChild(selectedDndCard);
+            selectedDndCard.classList.add('correct');
+            selectedDndCard.draggable = false;
+            dndMatchesFound++;
+            checkDndWin();
+          } else if (selectedDndCard) {
+            selectedDndCard.classList.add('wrong');
+            setTimeout(() => selectedDndCard.classList.remove('wrong'), 500);
+          }
+        });
+      });
+    }
+
+    window.handleCardClick = function(card) {
+      if (card.classList.contains('correct')) return;
+      document.querySelectorAll('.dnd-card').forEach(c => c.classList.remove('selected'));
+      card.classList.add('selected');
+      selectedDndCard = card;
+    };
+
+    window.handleSlotClick = function(slot) {
+      if (!selectedDndCard || slot.hasChildNodes()) return;
+      
+      if (selectedDndCard.dataset.id === slot.dataset.target) {
+        slot.appendChild(selectedDndCard);
+        selectedDndCard.classList.remove('selected');
+        selectedDndCard.classList.add('correct');
+        selectedDndCard.draggable = false;
+        selectedDndCard = null;
+        dndMatchesFound++;
+        checkDndWin();
+      } else {
+        selectedDndCard.classList.add('wrong');
+        const tempCard = selectedDndCard;
+        setTimeout(() => tempCard.classList.remove('wrong'), 500);
+        selectedDndCard.classList.remove('selected');
+        selectedDndCard = null;
+      }
+    };
+
+    function checkDndWin() {
+      if (dndMatchesFound === dndData.length) {
+        nextBtn.disabled = false;
+        const bank = document.getElementById('dndBank');
+        bank.innerHTML = '<div style="text-align: center; color: #16A34A; font-size: 1.5rem; font-weight: 800; width: 100%;">Ура! Промт про дракона собран! 🎉</div>';
+      }
+    }
+
+    // --- УПРАВЛЕНИЕ СЛАЙДАМИ ---
+    function updateUI() {
+      const totalSlides = quizData.length + 3; // Вопросы + Игра 1 + Игра 2 + Финал
+
+      // Показываем нужный слайд
+      document.querySelectorAll('.slide').forEach((el, i) => {
+        el.classList.toggle('active', i === currentIndex);
+      });
+
+      // Обновляем прогресс бар
+      const progress = (currentIndex / (totalSlides - 1)) * 100;
+      progressBar.style.width = `${progress}%`;
+
+      // Настройка кнопки
+      if (currentIndex < totalSlides - 1) {
+        nextBtn.disabled = true;
+        nextBtn.style.display = 'block';
+      } else {
+        // На финальном слайде
+        nextBtn.style.display = 'none';
+        document.getElementById('progressContainer').style.display = 'none';
+        document.getElementById('mainSubtitle').style.display = 'none';
+      }
+    }
+
+    nextBtn.addEventListener('click', () => {
+      const totalSlides = quizData.length + 3;
+      if (currentIndex < totalSlides - 1) {
+        currentIndex++;
+        updateUI();
+      }
+    });
+
+    // Запуск приложения
+    renderSlides();
+    initDND();
+    updateUI();
+
+  </script>
+</body>
+</html>
